@@ -1,0 +1,190 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String  @id @default(auto()) @map("_id") @db.ObjectId
+  name          String
+  email         String  @unique
+  phone         String
+  emailVerified Boolean @default(false)
+  password      String
+  items         Json[]  @default([]) //prod-ID qty 
+  image         String  @default("https://cactusthemes.com/blog/wp-content/uploads/2018/01/tt_avatar_small.jpg")
+  type          String  @default("crendetials")
+  orderId       String[]  @db.ObjectId @default([])
+  message       Message[]
+  discuss       Discuss[]
+  contractDigital ContractDigital[]
+}
+
+model Product {
+  id           String      @id @default(auto()) @map("_id") @db.ObjectId
+  code_product String      @unique
+  name         String?
+  price        Float
+  image        String[]
+  category     String
+  variants     String[]
+  details      String
+  spec         String
+  information  String
+  sold         Int
+  rate         Int
+  reviews      Review[]
+  stock        Int
+  minOrder     Int
+  desc         String
+  discuss      Discuss[]
+  contractDigital ContractDigital[]
+}
+
+model Review {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  context      String
+  name         String
+  image        String
+  rate         Int      @default(0)
+  product      Product  @relation(fields: [code_product], references: [code_product])
+  code_product String
+  createdAt    DateTime @default(now())
+}
+
+model Discuss {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+  admin     Admin? @relation(fields: [adminId], references: [id])
+  adminId   String?
+  product   Product   @relation(fields: [productId], references: [id])
+  productId String
+  messages  Message[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Message {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  content    String?
+  discuss    Discuss @relation(fields: [discussId], references: [id])
+  discussId  String
+  user       User?    @relation(fields: [userId], references: [id])
+  userId     String?
+  image      String?
+  admin      Admin?   @relation(fields: [adminId], references: [id])
+  adminId    String?
+  createdAt  DateTime @default(now())
+}
+
+enum OrderStatus {
+  Pending
+  Success
+  Failed
+}
+model Orders {
+  id             String       @id @default(auto()) @map("_id") @db.ObjectId
+  orderId        String       @default("") 
+  products       Json[]       @default([])
+  status         OrderStatus  @default(Pending)
+  userId         String[]     @db.ObjectId @default([])
+  orderDate      DateTime     @default(now())
+  paymentProof   String       @default("")
+  paymentMethods String       @default("")
+}
+
+
+model ContractDigital {
+  id          String          @id @default(auto()) @map("_id") @db.ObjectId
+  userId      String
+  user        User            @relation(fields: [userId], references: [id])
+  productId   String
+  product     Product         @relation(fields: [productId], references: [id])
+
+  contractName String?
+  fullName      String?
+  address       String?
+  cost          Float?
+  startDate     DateTime?
+  endDate       DateTime?
+
+  descriptionContract String
+  features      String[]
+  scopeOfWork   String?
+
+  // PDF-related
+  filename      String?
+  isFinalized   Boolean        @default(false)
+
+  signature String?
+
+  status        ContractStatus @default(PENDING_APPROVAL)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  progress ContractProgress[]
+  feedback Feedback[]
+
+  @@index([userId]) 
+  @@index([productId]) 
+  @@index([status])
+}
+
+enum ContractStatus {
+  PENDING_APPROVAL
+  AWAITING_CLIENT_SIGNATURE
+  AWAITING_ADMIN_SIGNATURE
+  AWAITING_PAYMENT
+  REVISION_REQUESTED
+  ACTIVE
+  COMPLETED
+  CANCELED
+}
+
+model Feedback {
+  id            String          @id @default(auto()) @map("_id") @db.ObjectId
+  contractId    String
+  contract      ContractDigital @relation(fields: [contractId], references: [id])
+  content       String
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+
+  @@index([contractId])
+}
+
+
+model PdfDocument {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String
+  productId String
+  filename  String
+  createdAt DateTime @default(now())
+}
+
+model ContractProgress {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  contractId  String
+  contract    ContractDigital @relation(fields: [contractId], references: [id])
+  description String
+  createdAt   DateTime @default(now())
+
+  @@index([contractId])
+}
+
+model Admin {
+  id       String @id @default(auto()) @map("_id") @db.ObjectId
+  username String
+  password String
+  discuss Discuss[]
+  message Message[]
+}
