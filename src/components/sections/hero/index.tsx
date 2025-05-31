@@ -1,8 +1,11 @@
 import { Button } from "@/components/ui/button";
 import React from "react";
 import Link from "next/link";
-import Lottie from "lottie-react";
-import bussinessAnimation from '../../../../public/animations/business-team.json'
+import dynamic from "next/dynamic";
+import bussinessAnimation from "../../../../public/animations/business-team.json";
+
+// Dynamic import untuk Lottie (supaya tidak error SSR)
+const Lottie = dynamic(() => import("lottie-react"), { ssr: false });
 
 const Hero = () => {
   return (
@@ -13,10 +16,14 @@ const Hero = () => {
             E-Shop DBI
           </h1>
           <p className="lg:text-left text-center leading-normal text-gray-500 ">
-            PT. Digital Blockchain Indonesia focuses on developing state-of-the-art mobile applications for iOS and Android 
-            that utilize blockchain technology. Working together with the knowledgeable staff at Mudapedia, 
-            we are excited to develop a potent web-based e-commerce platform. Our creative method creates safe, effective, 
-            and scalable solutions that spur development and digital transformation by fusing blockchain technology with user-centric design.
+            PT. Digital Blockchain Indonesia focuses on developing
+            state-of-the-art mobile applications for iOS and Android that
+            utilize blockchain technology. Working together with the
+            knowledgeable staff at Mudapedia, we are excited to develop a potent
+            web-based e-commerce platform. Our creative method creates safe,
+            effective, and scalable solutions that spur development and digital
+            transformation by fusing blockchain technology with user-centric
+            design.
           </p>
           <div className="flex justify-center gap-3 lg:justify-normal lg:py-4">
             <Link href={"/#products"}>
@@ -29,7 +36,7 @@ const Hero = () => {
         </div>
       </div>
       <div className="lg:w-1/2 flex lg:justify-center justify-center items-center lg:h-[65vh] md:h-[65vh] h-[40vh] overflow-hidden">
-        <Lottie animationData={bussinessAnimation} />
+        <Lottie animationData={bussinessAnimation} style={{ height: 350 }} />
       </div>
     </div>
   );

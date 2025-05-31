@@ -18,7 +18,6 @@ import {
 import { useToast } from "@/components/ui/use-toast";
 import axios from "axios";
 import emailVerified from "../../../../public/animations/emailVerified.json";
-import Lottie from "lottie-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
@@ -48,6 +47,12 @@ import ContractPDF from "@/pages/pdf";
 import { pdf } from "@react-pdf/renderer";
 import { ContractDataType } from "@/types/contractDataTypes";
 import Image from "next/image";
+import dynamic from "next/dynamic";
+
+const Lottie = dynamic(() => import("lottie-react"), { ssr: false });
+
+
+
 
 const ProfilePage = ({
   items,

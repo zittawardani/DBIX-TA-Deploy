@@ -5,8 +5,10 @@ import { useEffect, useState } from "react";
 import { ProductDataType } from "@/types/productDataTypes";
 import axios from "axios";
 import SkeletonGrid from "@/components/ui/skeletonGrid";
-import Lottie from "lottie-react";
-import upcommingAnimation from '../../../../public/animations/upcomming.json'
+import dynamic from "next/dynamic";
+import upcommingAnimation from "../../../../public/animations/upcomming.json";
+
+const Lottie = dynamic(() => import("lottie-react"), { ssr: false });
 
 const BestProducts = () => {
   const categoryView = [
@@ -27,43 +29,52 @@ const BestProducts = () => {
     "NFT Platform",
     "(COIN) - Sha 256",
     "(TOKEN) - ERC 20, BSC 20, TRC 20",
-  ]
-  const [productsData, setProductsData] = useState<ProductDataType[]>([])
-  const [category, setCategory] = useState('website')
-  const [load, setLoad] = useState(false)
+  ];
+  const [productsData, setProductsData] = useState<ProductDataType[]>([]);
+  const [category, setCategory] = useState("website");
+  const [load, setLoad] = useState(false);
 
   const getData = async () => {
-    setLoad(true)
+    setLoad(true);
     try {
-      const resp = await axios(`/api/product/get/categories?name=${category}`)
-      setProductsData(resp.data)
+      const resp = await axios(`/api/product/get/categories?name=${category}`);
+      setProductsData(resp.data);
       setTimeout(() => {
         // setLoad(false)
-      }, 1000)
-      setLoad(false)
+      }, 1000);
+      setLoad(false);
     } catch (error) {
-      setLoad(false)
-      console.log(error)
+      setLoad(false);
+      console.log(error);
     }
-  }
+  };
   useEffect(() => {
-    getData()
-  }, [category])
+    getData();
+  }, [category]);
 
   return (
     <div className="w-full flex flex-col gap-8 lg:mt-5" id="products">
       <div className="flex flex-col gap-3 items-center">
         <h1 className="text-2xl lg:text-5xl capitalize text-center font-semibold">
           Products
-          <p className="text-sm text-[#455A64] mt-3">There are numbers of reasons</p>
+          <p className="text-sm text-[#455A64] mt-3">
+            There are numbers of reasons
+          </p>
         </h1>
       </div>
       <div className="w-full">
-        <Tabs defaultValue={categoryView[0]} className="w-full flex flex-col gap-5 lg:justify-center items-center h-fit">
+        <Tabs
+          defaultValue={categoryView[0]}
+          className="w-full flex flex-col gap-5 lg:justify-center items-center h-fit"
+        >
           <ScrollArea className="w-full max-w-screen-xl pb-4 h-fit">
             <TabsList className="w-full">
-              {categoryView.map(item => (
-                <TabsTrigger key={item} value={item} onClick={() => setCategory(item.toLowerCase())}>
+              {categoryView.map((item) => (
+                <TabsTrigger
+                  key={item}
+                  value={item}
+                  onClick={() => setCategory(item.toLowerCase())}
+                >
                   {item}
                 </TabsTrigger>
               ))}
@@ -88,8 +99,18 @@ const BestProducts = () => {
                   ) : (
                     <>
                       <div className="max-w-xl mx-auto w-full">
-                        <Lottie animationData={upcommingAnimation} size={16} />
-                        <h1 className="text-center font-medium text-xl italic leading-snug">Sorry the products is incomming as soon as posible 😊 <br /> <span className="font-normal text-sm">Please stay tune on this website to see our new products 🚀</span></h1>
+                        <Lottie
+                          animationData={upcommingAnimation}
+                          style={{ height: 240 }}
+                        />
+                        <h1 className="text-center font-medium text-xl italic leading-snug">
+                          Sorry the products is incomming as soon as posible 😊{" "}
+                          <br />
+                          <span className="font-normal text-sm">
+                            Please stay tune on this website to see our new
+                            products 🚀
+                          </span>
+                        </h1>
                       </div>
                     </>
                   )}
