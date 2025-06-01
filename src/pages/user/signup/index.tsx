@@ -105,7 +105,12 @@ export default function Signup() {
       }
 
       setLoad(true);
-      await axios.post("/api/user/post", body);
+      await axios.post("/api/user/post", {
+        name: `${firstName} ${lastName}`,
+        email: email,
+        password: password,
+        phone: phone,
+      });
       toast({
         className: cn(
           "top-0 right-0 flex fixed md:max-w-[420px] md:top-4 md:right-4"
@@ -224,11 +229,11 @@ export default function Signup() {
                 />
               </div>
               <div className="flex items-center gap-2  w-fit">
-              <Checkbox/>
-              <Label htmlFor="terms" className="text-sm">
-                I agree to the terms and conditions
-              </Label>
-            </div>
+                <Checkbox />
+                <Label htmlFor="terms" className="text-sm">
+                  I agree to the terms and conditions
+                </Label>
+              </div>
               <Button
                 type="submit"
                 disabled={load}
@@ -258,7 +263,6 @@ export default function Signup() {
                 Sign in
               </Link>
             </div>
-            
           </CardContent>
         </Card>
       </div>
