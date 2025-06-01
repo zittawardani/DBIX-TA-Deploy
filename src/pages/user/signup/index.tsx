@@ -105,12 +105,7 @@ export default function Signup() {
       }
 
       setLoad(true);
-      await axios.post("/api/user/post", {
-        name: `${firstName} ${lastName}`,
-        email: email,
-        password: password,
-        phone: phone,
-      });
+      await axios.post("/api/user/post", body);
       toast({
         className: cn(
           "top-0 right-0 flex fixed md:max-w-[420px] md:top-4 md:right-4"
@@ -162,9 +157,10 @@ export default function Signup() {
             <form onSubmit={handleSignup} className="grid gap-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="grid gap-2">
-                  <Label htmlFor="first-name">First name</Label>
+                  <Label htmlFor="firstName">First name</Label>
                   <Input
-                    id="first-name"
+                    id="firstName"
+                    name="firstName"
                     placeholder="Max"
                     onChange={(e) => {
                       setFirstName(e.target.value);
@@ -172,9 +168,10 @@ export default function Signup() {
                   />
                 </div>
                 <div className="grid gap-2">
-                  <Label htmlFor="last-name">Last name</Label>
+                  <Label htmlFor="lastName">Last name</Label>
                   <Input
-                    id="last-name"
+                    id="lastName"
+                    name="lastName"
                     placeholder="Robinson"
                     onChange={(e) => {
                       setLastName(e.target.value);
@@ -187,6 +184,7 @@ export default function Signup() {
                 <Input
                   id="email"
                   type="email"
+                  name="email"
                   placeholder="dbix@example.com"
                   onChange={(e) => {
                     setEmail(e.target.value);
@@ -200,6 +198,7 @@ export default function Signup() {
                   <Input
                     id="phone"
                     type="tel"
+                    name="phone"
                     placeholder="Your phone number"
                     onChange={(e) => {
                       setPhone(e.target.value);
@@ -213,23 +212,29 @@ export default function Signup() {
                 <Input
                   id="password"
                   type="password"
+                  name="password"
                   onChange={(e) => {
                     setPassword(e.target.value);
                   }}
                 />
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="confirm-password">Confirm Password</Label>
+                <Label htmlFor="confirmPassword">Confirm Password</Label>
                 <Input
-                  id="confirm-password"
+                  id="confirmPassword"
                   type="password"
+                  name="confirmPassword"
                   onChange={(e) => {
                     setConfirmPassword(e.target.value);
                   }}
                 />
               </div>
               <div className="flex items-center gap-2  w-fit">
-                <Checkbox />
+                <Checkbox
+                  id="terms"
+                  checked={isTermsAgreed}
+                  onChange={handleCheckboxChange}
+                />
                 <Label htmlFor="terms" className="text-sm">
                   I agree to the terms and conditions
                 </Label>
