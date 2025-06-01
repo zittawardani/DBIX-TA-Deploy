@@ -200,7 +200,7 @@ const ProfilePage = ({
   const handlePreview = (filename: string) => {
     if (!filename) return;
     setIsPreviewDialogOpen(true);
-    const fileUrl = `http://localhost:3000/api/contract/pdf/get?filename=${filename}`;
+    const fileUrl = `https://dbix-ta-deploy-wv6w.vercel.app/api/contract/pdf/get?filename=${filename}`;
     setPdfUrl(fileUrl);
   };
 
