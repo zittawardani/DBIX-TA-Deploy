@@ -230,7 +230,7 @@ export default function Signup() {
                 />
               </div>
               <div className="flex items-center gap-2  w-fit">
-                <Checkbox id="terms" onChange={handleCheckboxChange} />
+                <Checkbox id="terms" onCheckedChange={handleCheckboxChange} />
                 <Label htmlFor="terms" className="text-sm">
                   I agree to the terms and conditions
                 </Label>
