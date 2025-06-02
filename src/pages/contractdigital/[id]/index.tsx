@@ -11,7 +11,6 @@ import axios from "axios";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/components/ui/use-toast";
 import formattedPrice from "@/utils/formattedPrice";
-import { useProductStore } from "@/store/product";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
@@ -23,9 +22,31 @@ import {
   FormLabel,
 } from "@/components/ui/form";
 import { useForm } from "react-hook-form";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Shell } from "lucide-react";
+import { ContractDataType } from "@/types/contractDataTypes";
+
+type ContractFormData = {
+  fullName: string;
+  address: string;
+  startDate: string;
+  endDate: string;
+  descriptionContract: string;
+  agreement: boolean;
+};
 
 const Contractdigital = () => {
-  const { id } = useRouter().query;
+  const router = useRouter();
+  const { id } = router.query;
   const { data: session, status }: any = useSession(); //mengambil data sesi pengguna (login)
   const [product, setProduct] = useState<ProductDataType>(
     {} as ProductDataType
@@ -34,9 +55,12 @@ const Contractdigital = () => {
   const [load, setLoad] = useState(false); //loading data
   const { toast } = useToast(); //untuk menampilkan notifikasi kepada pengguna
   const [updated] = useState(false); //menandai perubahan sehingga dapat memicu pengambilan ulang data
-
-  const router = useRouter();
-  const { selectedProduct } = useProductStore();
+  const [openAlert, setOpenAlert] = useState(false);
+  const [unpaidContracts, setUnpaidContracts] = useState<ContractDataType[]>(
+    []
+  );
+  const [pendingSubmit, setPendingSubmit] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const form = useForm({
     defaultValues: {
@@ -52,7 +76,38 @@ const Contractdigital = () => {
 
   const agreement = form.watch("agreement");
 
-  const onSubmit = async (data: any) => {
+  const createContract = async (data: any) => {
+    try {
+      const response = await axios.post("/api/contract/post/user", {
+        userId: session.user?.id,
+        productId: product.id,
+        ...data,
+      });
+
+      if (response.status === 201) {
+        toast({
+          title: "Sukses!",
+          description: "Draft kontrak berhasil disimpan.",
+        });
+        form.reset();
+        router.back();
+      } else {
+        toast({
+          title: "Oops!",
+          description: "Terjadi sesuatu yang tidak terduga.",
+        });
+      }
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: "Terjadi kesalahan saat membuat kontrak.",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const onSubmit = async (data: ContractFormData) => {
     if (
       !Object.values(data).every((value) => value !== "" && value !== false)
     ) {
@@ -61,7 +116,7 @@ const Contractdigital = () => {
     }
 
     try {
-      // 1. Cek apakah ada kontrak belum dibayar
+      setIsLoading(true);
       const unpaidStatuses = [
         "PENDING_APPROVAL",
         "AWAITING_CLIENT_SIGNATURE",
@@ -73,45 +128,28 @@ const Contractdigital = () => {
       const checkRes = await axios(
         `/api/contract/get?userId=${session.user?.id}`
       );
-
-      const unpaidContracts = checkRes.data.filter((contract: any) =>
+      const unpaid = checkRes.data.filter((contract: any) =>
         unpaidStatuses.includes(contract.status)
       );
 
-      if (unpaidContracts.length > 0) {
-        const confirm = window.confirm(
-          "Anda masih memiliki kontrak yang belum dibayar. Apakah ingin membatalkan kontrak lama dan membuat yang baru?"
-        );
-
-        if (!confirm) return;
-
-        await Promise.all(
-          unpaidContracts.map((contract: any) =>
-            axios.delete(`/api/contract/delete/${contract.id}`)
-          )
-        );
+      if (unpaid.length > 0) {
+        setUnpaidContracts(unpaid);
+        setPendingSubmit(data);
+        setOpenAlert(true);
+        return;
       }
 
-      console.log("hahai");
-      // 3. Lanjut buat kontrak baru
-      const response = await axios.post("/api/contract/post/user", {
-        userId: session.user?.id,
-        productId: product.id,
-        ...data,
-      });
-
-      if (response.status === 201) {
-        console.log("✅ Draft contract created:", response.data);
-        alert("Draft kontrak berhasil disimpan.");
-      } else {
-        console.warn("⚠️ Kontrak dibuat, tapi respons tidak sesuai:", response);
-        alert("Terjadi sesuatu yang tidak terduga.");
-      }
+      await createContract(data);
     } catch (error: any) {
-      console.error("❌ Error generating contract:", error);
-      alert("Terjadi kesalahan saat membuat kontrak.");
+      toast({
+        title: "Error",
+        description: "Terjadi kesalahan saat membuat kontrak.",
+      });
+      setIsLoading(false);
     }
   };
+
+  const handleDeleteContract = async () => {};
 
   const getData = async () => {
     setLoad(true);
@@ -354,7 +392,7 @@ const Contractdigital = () => {
                     control={form.control}
                     name="agreement"
                     render={({ field }) => (
-                      <FormItem>
+                      <FormItem className="flex items-center gap-2 space-y-0">
                         <FormControl>
                           <Checkbox
                             checked={field.value}
@@ -362,7 +400,7 @@ const Contractdigital = () => {
                             required
                           />
                         </FormControl>
-                        <span>Setuju</span>
+                        <span>Agree</span>
                       </FormItem>
                     )}
                   />
@@ -370,14 +408,63 @@ const Contractdigital = () => {
 
                 <Button
                   type="submit"
-                  className="mt-4 w-full bg-black text-white"
-                  disabled={!agreement}
+                  disabled={isLoading || !agreement}
+                  className="w-full flex items-center gap-2"
                 >
-                  Create Contract
+                  {isLoading ? (
+                    <>
+                      <Shell
+                        size={24}
+                        strokeWidth={2}
+                        className="animate-spin"
+                      />
+                      Loading...
+                    </>
+                  ) : (
+                    "Create an account!"
+                  )}
                 </Button>
               </form>
             </Form>
           </div>
+          <AlertDialog open={openAlert} onOpenChange={setOpenAlert}>
+            <AlertDialogContent className="w-fit">
+              <AlertDialogHeader>
+                <AlertDialogTitle>
+                  Are you sure you want to proceed with this digital contract?
+                </AlertDialogTitle>
+                <AlertDialogDescription>
+                  By confirming, this contract will be officially created and
+                  recorded.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel
+                  className=""
+                  onClick={() => setOpenAlert(false)}
+                >
+                  Cancel
+                </AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={async () => {
+                    // Hapus kontrak-kontrak lama
+                    await Promise.all(
+                      unpaidContracts.map((contract: any) =>
+                        axios.delete(`/api/contract/delete/${contract.id}`)
+                      )
+                    );
+                    setOpenAlert(false);
+                    if (pendingSubmit) {
+                      await createContract(pendingSubmit);
+                      setPendingSubmit(null);
+                    }
+                  }}
+                >
+                  Confirm
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
       )}
     </>
