@@ -90,7 +90,6 @@ const Contractdigital = () => {
           description: "Draft kontrak berhasil disimpan.",
         });
         form.reset();
-        router.back();
       } else {
         toast({
           title: "Oops!",
