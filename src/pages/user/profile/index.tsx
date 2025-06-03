@@ -13,11 +13,13 @@ import {
   LoaderCircle,
   LockKeyholeIcon,
   PenSquareIcon,
+  Shell,
   ShoppingBasketIcon,
 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import axios from "axios";
 import emailVerified from "../../../../public/animations/emailVerified.json";
+import Lottie from "lottie-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
@@ -47,12 +49,17 @@ import ContractPDF from "@/pages/pdf";
 import { pdf } from "@react-pdf/renderer";
 import { ContractDataType } from "@/types/contractDataTypes";
 import Image from "next/image";
-import dynamic from "next/dynamic";
-
-const Lottie = dynamic(() => import("lottie-react"), { ssr: false });
-
-
-
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 const ProfilePage = ({
   items,
@@ -97,6 +104,7 @@ const ProfilePage = ({
 
   const [openCheckout, setOpenCheckout] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
+  const [isSignLoading, setIsSignLoading] = useState(false);
 
   const handleOpenCheckout = (productData: any) => {
     if (!productData.variants || !Array.isArray(productData.variants)) {
@@ -200,7 +208,7 @@ const ProfilePage = ({
   const handlePreview = (filename: string) => {
     if (!filename) return;
     setIsPreviewDialogOpen(true);
-    const fileUrl = `https://dbix-ta-deploy-wv6w.vercel.app/api/contract/pdf/get?filename=${filename}`;
+    const fileUrl = `http://localhost:3000/api/contract/pdf/get?filename=${filename}`;
     setPdfUrl(fileUrl);
   };
 
@@ -230,15 +238,18 @@ const ProfilePage = ({
       setFeedback("");
     }
   };
-
   const handleSign = async () => {
     if (!selectedContract) return;
     if (!signature) {
-      alert("Silakan tanda tangani kontrak terlebih dahulu!");
+      toast({
+        title: "Signature Required",
+        description: "Please sign the contract first!",
+        variant: "destructive",
+      });
       return;
     }
     try {
-      // 1. Update status kontrak segera
+      setIsSignLoading(true);
       const response = await axios.put("/api/contract/put", {
         ...selectedContract,
         contractId: selectedContract.id,
@@ -251,14 +262,15 @@ const ProfilePage = ({
       }
       const updatedContract = response.data.contract;
 
-      // 2. Segera tutup dialog, refresh data, tampilkan notifikasi
       setIsSignature(false);
-      getContractData();
-      alert(
-        "Kontrak berhasil ditandatangani! File PDF akan diunggah di background."
-      );
+      await getContractData();
 
-      // 3. Upload PDF di background (tidak await)
+      toast({
+        title: "Contract signed successfully!",
+        description: "The PDF file will be uploaded in the background.",
+        variant: "default",
+      });
+      setIsSignLoading(false);
       (async () => {
         try {
           const data = {
@@ -290,15 +302,29 @@ const ProfilePage = ({
           await axios.put("/api/contract/pdf/put", formData, {
             headers: { "Content-Type": "multipart/form-data" },
           });
-          // Bisa tambahkan notif/alert sukses upload di background jika mau
+
+          toast({
+            title: "PDF uploaded successfully!",
+            description: "Your contract PDF file is now available.",
+            variant: "default",
+          });
         } catch (err) {
           console.error("Gagal upload PDF di background:", err);
-          // Bisa tambahkan notif/alert gagal upload jika mau
+          toast({
+            title: "PDF Upload Failed",
+            description:
+              "An error occurred while uploading the PDF in the background.",
+            variant: "destructive",
+          });
         }
       })();
     } catch (err) {
       console.error("❌ Error:", err);
-      alert("Terjadi kesalahan saat memperbarui kontrak.");
+      toast({
+        title: "Error",
+        description: "An error occurred while updating the contract.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -318,19 +344,13 @@ const ProfilePage = ({
   // );
 
   const handleRejectContract = async (id: string) => {
+    if (!id) return;
     try {
-      const confirmDelete = window.confirm(
-        "Apakah kamu yakin ingin menolak kontrak ini?"
-      );
-      if (!confirmDelete) return;
-
       await axios.delete(`/api/contract/delete/${id}`);
-      alert("Kontrak berhasil ditolak");
-      // Ambil ulang data kontrak setelah delete
+      toast({ title: "Kontrak berhasil dibatalkan" });
       await getContractData();
     } catch (e) {
-      console.error("❌ Gagal menolak kontrak:", e);
-      alert("Terjadi kesalahan saat menolak kontrak");
+      toast({ title: "Gagal menolak kontrak", variant: "destructive" });
     }
   };
 
@@ -727,12 +747,36 @@ const ProfilePage = ({
                                 "AWAITING_ADMIN_SIGNATURE",
                                 "AWAITING_PAYMENT",
                               ].includes(item.status) && (
-                                <Button
-                                  onClick={() => handleRejectContract(item.id)}
-                                  className="bg-gray-50 text-black px-2 py-2 rounded-md w-fit"
-                                >
-                                  Cancel
-                                </Button>
+                                <AlertDialog>
+                                  <AlertDialogTrigger>
+                                    <Button className="bg-gray-50 text-black px-2 py-2 rounded-md w-fit">
+                                      Cancel
+                                    </Button>
+                                  </AlertDialogTrigger>
+                                  <AlertDialogContent className="w-fit">
+                                    <AlertDialogHeader>
+                                      <AlertDialogTitle>
+                                        Are you absolutely sure?
+                                      </AlertDialogTitle>
+                                      <AlertDialogDescription>
+                                        As a result, the discussion will be
+                                        permanently deleted.
+                                      </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                      <AlertDialogCancel>
+                                        Cancel
+                                      </AlertDialogCancel>
+                                      <AlertDialogAction
+                                        onClick={() =>
+                                          handleRejectContract(item.id)
+                                        }
+                                      >
+                                        Confirm
+                                      </AlertDialogAction>
+                                    </AlertDialogFooter>
+                                  </AlertDialogContent>
+                                </AlertDialog>
                               )}
                             </TableCell>
                           </TableRow>
@@ -829,6 +873,7 @@ const ProfilePage = ({
                 <div className="overflow-x-auto shadow-md"></div>
               </div>
             </TabsContent>
+
             {isSignature && (
               <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
                 <div className="bg-white p-4 rounded-lg shadow-lg flex flex-col">
@@ -841,12 +886,24 @@ const ProfilePage = ({
                       Close
                     </Button>
                     <Button onClick={handleSign}>
-                      Confirm and Accept Contract
+                      {isSignLoading ? (
+                        <>
+                          <Shell
+                            size={24}
+                            strokeWidth={2}
+                            className="animate-spin"
+                          />
+                          Loading...
+                        </>
+                      ) : (
+                        "Confirm and Accept Contract"
+                      )}
                     </Button>
                   </div>
                 </div>
               </div>
             )}
+
             {pdfUrl && isPreviewDialogOpen && (
               <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
                 <div className="bg-white p-4 rounded-lg shadow-lg w-[90%] h-[90%] flex flex-col">

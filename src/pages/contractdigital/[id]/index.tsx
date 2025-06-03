@@ -76,7 +76,7 @@ const Contractdigital = () => {
 
   const agreement = form.watch("agreement");
 
-  const createContract = async (data: any) => {
+  const createContract = async (data: ContractFormData) => {
     try {
       const response = await axios.post("/api/contract/post/user", {
         userId: session.user?.id,
@@ -86,20 +86,23 @@ const Contractdigital = () => {
 
       if (response.status === 201) {
         toast({
-          title: "Sukses!",
-          description: "Draft kontrak berhasil disimpan.",
+          title: "Success!",
+          description: "Draft contract has been saved successfully.",
+          variant: "default",
         });
         form.reset();
       } else {
         toast({
           title: "Oops!",
-          description: "Terjadi sesuatu yang tidak terduga.",
+          description: "Something unexpected happened.",
+          variant: "destructive",
         });
       }
     } catch (error: any) {
       toast({
         title: "Error",
-        description: "Terjadi kesalahan saat membuat kontrak.",
+        description: "An error occurred while creating the contract.",
+        variant: "destructive",
       });
     } finally {
       setIsLoading(false);
