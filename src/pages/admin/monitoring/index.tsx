@@ -222,7 +222,6 @@ const Monitoring: React.FC = () => {
                                   )}
                                 ></FormField>
                                 <div className="flex justify-end gap-4">
-                                  <Button variant={"ghost"}>Cancel</Button>
                                   <Button
                                     type="submit"
                                     className="bg-black text-white"
