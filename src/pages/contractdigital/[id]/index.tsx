@@ -220,7 +220,7 @@ const Contractdigital = () => {
                     </h1>
                   )}
                   <h1 className="font-semibold text-sm">
-                    (Harga dapat berubah sesuai permintaan)
+                    (Prices may change according to demand)
                   </h1>
                   <Tabs
                     defaultValue="details"

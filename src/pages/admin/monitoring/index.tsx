@@ -235,7 +235,7 @@ const Monitoring: React.FC = () => {
                               <ul>
                                 {progressData.map((item, index) => (
                                   <li key={index}>
-                                    {item.description} - {item.createdAt}
+                                    {item.description} - {new Date(item.createdAt).toLocaleString()}
                                   </li>
                                 ))}
                               </ul>
