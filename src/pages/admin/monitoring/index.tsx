@@ -35,6 +35,7 @@ import { Input } from "@/components/ui/input";
 import { useForm } from "react-hook-form";
 import { ContractDataType } from "@/types/contractDataTypes";
 import { ProgressDataTypes } from "@/types/progressDataTypes";
+import { CheckCircle } from "lucide-react";
 
 const Monitoring: React.FC = () => {
   const [contractData, setContractData] = useState<ContractDataType[]>([]);
@@ -231,17 +232,23 @@ const Monitoring: React.FC = () => {
                                 </div>
                               </form>
                             </Form>
-                            {progressData && progressData.length > 0 ? (
-                              <ul>
-                                {progressData.map((item, index) => (
-                                  <li key={index}>
-                                    {item.description} - {new Date(item.createdAt).toLocaleString()}
-                                  </li>
-                                ))}
-                              </ul>
-                            ) : (
-                              <p>No progress available</p>
-                            )}
+                            <div className="space-y-4">
+                              {progressData.map((item, index) => (
+                                <div key={index} className="flex gap-4">
+                                  <CheckCircle className="w-5 h-5 text-green-500 dark:text-white mt-1" />
+                                  <div>
+                                    <div className="text-sm text-gray-800 dark:text-gray-200">
+                                      {item.description}
+                                    </div>
+                                    <div className="text-xs text-muted-foreground">
+                                      {new Date(
+                                        item.createdAt
+                                      ).toLocaleString()}
+                                    </div>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
                           </div>
                         </DialogContent>
                       </Dialog>
